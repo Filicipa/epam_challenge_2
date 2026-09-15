@@ -1,0 +1,28 @@
+name: Upload Website
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - main
+
+jobs:
+    deploy:
+        runs-on: ubuntu-22.04
+        env:
+            BUCKET_NAME: ${{ vars.PROD_BUCKET_NAME }}
+            AWS_ACCESS_KEY_ID: ${{ secrets.PROD_AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.PROD_AWS_SECRET_ACCESS_KEY }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v6
+
+            - name: Configure AWS Credentials
+              uses: aws-actions/configure-aws-credentials@v6
+              with:
+                  aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: eu-west-1
+
+            - name: Deploy static site to S3 bucket
+              run: aws s3 sync ./dist/ s3://${{ env.BUCKET_NAME }}/ --delete
